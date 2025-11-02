@@ -1,6 +1,8 @@
 import React from "react";
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AquariumList from "./components/AquariumList";
+import AuthPage from "./pages/authPage.jsx";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
 function DashboardShell() {
   return (
@@ -76,8 +78,29 @@ class ErrorBoundary extends React.Component {
 
 export default function App() {
   return (
-    <Router>
-      <DashboardShell />
-    </Router>
+    <BrowserRouter>
+      <Routes>
+        
+        <Route path="/auth" element={<AuthPage />} />
+
+        <Route
+          path="/*"
+          element={
+            <SignedOut>
+              <Navigate to="/auth" replace />
+            </SignedOut>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <SignedIn>
+              <DashboardShell />
+            </SignedIn>
+          }
+        />
+
+      </Routes>
+    </BrowserRouter>
   );
 }
