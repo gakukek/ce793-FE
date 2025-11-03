@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import AddAquariumForm from "./AddAquariumForm";
 import SensorChart from "./SensorChart";
 import EditAquariumModal from "./EditAquariumModal";
+import { useAuth } from "@clerk/clerk-react";
 import {
   MagnifyingGlassIcon,
   ChartBarIcon,
@@ -22,11 +23,16 @@ export default function AquariumList() {
   const [chartLoading, setChartLoading] = useState(false);
   const [query, setQuery] = useState("");
 
-  // ✅ Ambil data aquarium
+  const { getToken } = useAuth(); // ✅ ADD THIS
+
+  // ✅ Ambil data aquarium WITH AUTH
   async function fetchAquariums() {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/aquariums`);
+      const token = await getToken(); // ✅ GET TOKEN
+      const res = await axios.get(`${API_BASE}/aquariums`, {
+        headers: { Authorization: `Bearer ${token}` } // ✅ ADD HEADER
+      });
       setAquariums(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("❌ Error fetching aquariums:", err);
@@ -37,11 +43,14 @@ export default function AquariumList() {
     }
   }
 
-  // ✅ Hapus aquarium
+  // ✅ Hapus aquarium WITH AUTH
   async function deleteAquarium(id) {
     if (!window.confirm("Yakin ingin menghapus aquarium ini?")) return;
     try {
-      await axios.delete(`${API_BASE}/aquariums/${id}`);
+      const token = await getToken(); // ✅ GET TOKEN
+      await axios.delete(`${API_BASE}/aquariums/${id}`, {
+        headers: { Authorization: `Bearer ${token}` } // ✅ ADD HEADER
+      });
       fetchAquariums();
       toast.success("Aquarium dihapus");
     } catch (err) {
@@ -58,32 +67,35 @@ export default function AquariumList() {
     setEditing(null);
   }
 
-  // ✅ Ambil data sensor (atau pakai dummy)
-  function showSensorChartFor(aq) {
+  // ✅ Ambil data sensor WITH AUTH
+  async function showSensorChartFor(aq) {
     setChartLoading(true);
-    axios
-      .get(`${API_BASE}/sensor_data?aquarium_id=${aq.id}`)
-      .then((res) => {
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          const mapped = res.data.map((d) => ({
-            time: new Date(d.ts).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            ph: d.ph ? Number(d.ph) : null,
-            temperature: d.temperature_c ? Number(d.temperature_c) : null,
-            salinity: d.salinity ?? null,
-          }));
-          setSelectedSensorData(mapped);
-        } else {
-          generateDemoData();
-        }
-      })
-      .catch((err) => {
-        console.warn("Sensor API error, using demo data", err);
+    try {
+      const token = await getToken(); // ✅ GET TOKEN
+      const res = await axios.get(`${API_BASE}/sensor_data?aquarium_id=${aq.id}`, {
+        headers: { Authorization: `Bearer ${token}` } // ✅ ADD HEADER
+      });
+
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        const mapped = res.data.map((d) => ({
+          time: new Date(d.ts).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          ph: d.ph ? Number(d.ph) : null,
+          temperature: d.temperature_c ? Number(d.temperature_c) : null,
+          salinity: d.salinity ?? null,
+        }));
+        setSelectedSensorData(mapped);
+      } else {
         generateDemoData();
-      })
-      .finally(() => setChartLoading(false));
+      }
+    } catch (err) {
+      console.warn("Sensor API error, using demo data", err);
+      generateDemoData();
+    } finally {
+      setChartLoading(false);
+    }
   }
 
   function generateDemoData() {

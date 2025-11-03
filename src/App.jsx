@@ -1,10 +1,48 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AquariumList from "./components/AquariumList";
 import AuthPage from "./pages/authPage.jsx";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
+import axios from "axios";
+import toast from "react-hot-toast";
+
+const API_BASE = "https://aquascape.onrender.com";
+
 
 function DashboardShell() {
+  const { isSignedIn, getToken } = useAuth();
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    let synced = false;
+
+    async function syncUser() {
+      if (synced) return;
+      synced = true;
+      try {
+        const token = await getToken({ template: "backend" });
+
+        if (!token) {
+          console.error("❌ No token received from Clerk");
+          return;
+        }
+
+        await axios.post(`${API_BASE}/sync-user`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        toast.success("Berhasil login!");
+      } catch (err) {
+        console.error("❌ Sync user error:", err.response?.data || err);
+        toast.error("Gagal sinkronisasi user");
+      }
+    }
+
+    syncUser();
+  }, [isSignedIn]);
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="site-header text-white p-6 relative overflow-hidden">
@@ -79,28 +117,52 @@ class ErrorBoundary extends React.Component {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        
-        <Route path="/auth" element={<AuthPage />} />
+      <ErrorBoundary>
+        <Routes>
 
-        <Route
-          path="/*"
-          element={
-            <SignedOut>
-              <Navigate to="/auth" replace />
-            </SignedOut>
-          }
-        />
-        <Route
-          path="/*"
-          element={
-            <SignedIn>
-              <DashboardShell />
-            </SignedIn>
-          }
-        />
+          {/* Public Auth Page */}
+          <Route
+            path="/auth"
+            element={
+              <SignedOut>
+                <AuthPage />
+              </SignedOut>
+            }
+          />
 
-      </Routes>
+          {/* If user already signed in and visits /auth, redirect to dashboard */}
+          <Route
+            path="/auth"
+            element={
+              <SignedIn>
+                <Navigate to="/" replace />
+              </SignedIn>
+            }
+          />
+
+          {/* Protected routes */}
+          <Route
+            path="/*"
+            element={
+              <SignedIn>
+                <DashboardShell />
+              </SignedIn>
+            }
+          />
+
+          {/* Catch-all: if not signed in, redirect to /auth */}
+          <Route
+            path="/*"
+            element={
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            }
+          />
+
+        </Routes>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
+

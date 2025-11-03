@@ -2,24 +2,36 @@ import React, { useState } from "react";
 import axios from "axios";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
+import { useAuth } from "@clerk/clerk-react";
 
-const API_BASE = "https://aquascape.onrender.com/aquariums";
+const API_BASE = "https://aquascape.onrender.com";
 
 export default function AddAquariumForm({ onAdded }) {
-  const [form, setForm] = useState({ name: "", volume: "", location: "" });
+  const [form, setForm] = useState({ name: "", volume: "", device_uid: "" });
+  const { getToken, userId } = useAuth();
 
   async function handleSubmit(e) {
     e.preventDefault();
+
     try {
-      await axios.post(`${API_BASE}/aquariums`, form);
-      setForm({ name: "", volume: "", location: "" });
+      const token = await getToken();
+
+      await axios.post(`${API_BASE}/aquariums`, {
+        name: form.name,
+        size_litres: Number(form.volume) || null, 
+        device_uid: form.device_uid,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setForm({ name: "", volume: "", device_uid: "" });
       onAdded();
+      toast.success("Aquarium berhasil ditambahkan!");
     } catch (err) {
       console.error("❌ Gagal menambah aquarium:", err);
-      alert("Gagal menambah aquarium!");
+      toast.error("Gagal menambah aquarium!");
     }
   }
-
   return (
     <>
       <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg shadow mb-4">
