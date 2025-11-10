@@ -183,7 +183,7 @@ export default function AquariumList() {
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
-          <div className="flex items-start justify-between">
+          {/* <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">
                 Status Server
@@ -191,7 +191,7 @@ export default function AquariumList() {
               <p className="text-3xl font-bold text-green-600">Online</p>
             </div>
             <div className="text-green-500 bg-green-50 p-3 rounded-lg">✨</div>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -222,11 +222,11 @@ export default function AquariumList() {
                   Volume (L)
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                  Device UID
+                  Lokasi
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                {/* <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
                   Owner
-                </th>
+                </th> */}
                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">
                   Aksi
                 </th>

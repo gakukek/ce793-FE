@@ -56,8 +56,8 @@ export default function AddAquariumForm({ onAdded }) {
             type="text"
             placeholder="Lokasi"
             className="border p-2 rounded w-1/3"
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            value={form.device_uid}
+            onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
           />
         </div>
         <button

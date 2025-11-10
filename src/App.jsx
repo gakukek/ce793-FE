@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AquariumList from "./components/AquariumList";
 import AuthPage from "./pages/authPage.jsx";
@@ -11,36 +11,39 @@ const API_BASE = "https://aquascape.onrender.com";
 
 function DashboardShell() {
   const { isSignedIn, getToken } = useAuth();
+  const syncAttemptedRef = useRef(false);
 
   useEffect(() => {
     if (!isSignedIn) return;
-
-    let synced = false;
+    if (syncAttemptedRef.current) return; // Prevent duplicate calls
 
     async function syncUser() {
-      if (synced) return;
-      synced = true;
+      syncAttemptedRef.current = true;
+      
       try {
         const token = await getToken({ template: "backend" });
 
         if (!token) {
           console.error("❌ No token received from Clerk");
+          syncAttemptedRef.current = false; // Allow retry if no token
           return;
         }
 
-        await axios.post(`${API_BASE}/sync-user`, {}, {
+        const response = await axios.post(`${API_BASE}/sync-user`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+        console.log("✅ User synced:", response.data);
         toast.success("Berhasil login!");
       } catch (err) {
         console.error("❌ Sync user error:", err.response?.data || err);
         toast.error("Gagal sinkronisasi user");
+        syncAttemptedRef.current = false; // Allow retry on error
       }
     }
 
     syncUser();
-  }, [isSignedIn]);
+  }, [isSignedIn, getToken]);
 
 
   return (
@@ -119,50 +122,37 @@ export default function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <Routes>
-
-          {/* Public Auth Page */}
+          {/* Public routes */}
           <Route
             path="/auth"
             element={
-              <SignedOut>
-                <AuthPage />
-              </SignedOut>
+              <>
+                <SignedOut>
+                  <AuthPage />
+                </SignedOut>
+                <SignedIn>
+                  <Navigate to="/" replace />
+                </SignedIn>
+              </>
             }
           />
 
-          {/* If user already signed in and visits /auth, redirect to dashboard */}
-          <Route
-            path="/auth"
-            element={
-              <SignedIn>
-                <Navigate to="/" replace />
-              </SignedIn>
-            }
-          />
-
-          {/* Protected routes */}
+          {/* Protected dashboard route */}
           <Route
             path="/*"
             element={
-              <SignedIn>
-                <DashboardShell />
-              </SignedIn>
+              <>
+                <SignedIn>
+                  <DashboardShell />
+                </SignedIn>
+                <SignedOut>
+                  <Navigate to="/auth" replace />
+                </SignedOut>
+              </>
             }
           />
-
-          {/* Catch-all: if not signed in, redirect to /auth */}
-          <Route
-            path="/*"
-            element={
-              <SignedOut>
-                <Navigate to="/auth" replace />
-              </SignedOut>
-            }
-          />
-
         </Routes>
       </ErrorBoundary>
     </BrowserRouter>
   );
 }
-
