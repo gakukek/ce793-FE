@@ -1,8 +1,51 @@
-import React from "react";
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useEffect, useRef } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AquariumList from "./components/AquariumList";
+import AuthPage from "./pages/authPage.jsx";
+import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
+import axios from "axios";
+import toast from "react-hot-toast";
+
+const API_BASE = "https://aquascape.onrender.com";
+
 
 function DashboardShell() {
+  const { isSignedIn, getToken } = useAuth();
+  const syncAttemptedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    if (syncAttemptedRef.current) return; // Prevent duplicate calls
+
+    async function syncUser() {
+      syncAttemptedRef.current = true;
+      
+      try {
+        const token = await getToken({ template: "backend" });
+
+        if (!token) {
+          console.error("❌ No token received from Clerk");
+          syncAttemptedRef.current = false; // Allow retry if no token
+          return;
+        }
+
+        const response = await axios.post(`${API_BASE}/sync-user`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        console.log("✅ User synced:", response.data);
+        toast.success("Berhasil login!");
+      } catch (err) {
+        console.error("❌ Sync user error:", err.response?.data || err);
+        toast.error("Gagal sinkronisasi user");
+        syncAttemptedRef.current = false; // Allow retry on error
+      }
+    }
+
+    syncUser();
+  }, [isSignedIn, getToken]);
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="site-header text-white p-6 relative overflow-hidden">
@@ -76,8 +119,40 @@ class ErrorBoundary extends React.Component {
 
 export default function App() {
   return (
-    <Router>
-      <DashboardShell />
-    </Router>
+    <BrowserRouter>
+      <ErrorBoundary>
+        <Routes>
+          {/* Public routes */}
+          <Route
+            path="/auth"
+            element={
+              <>
+                <SignedOut>
+                  <AuthPage />
+                </SignedOut>
+                <SignedIn>
+                  <Navigate to="/" replace />
+                </SignedIn>
+              </>
+            }
+          />
+
+          {/* Protected dashboard route */}
+          <Route
+            path="/*"
+            element={
+              <>
+                <SignedIn>
+                  <DashboardShell />
+                </SignedIn>
+                <SignedOut>
+                  <Navigate to="/auth" replace />
+                </SignedOut>
+              </>
+            }
+          />
+        </Routes>
+      </ErrorBoundary>
+    </BrowserRouter>
   );
 }
