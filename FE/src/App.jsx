@@ -1,8 +1,25 @@
 import React from "react";
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AquariumList from "./components/AquariumList";
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { useAuthStore } from './stores/authStore';
 
 function DashboardShell() {
+  const clerkFrontendApi = import.meta.env.VITE_CLERK_FRONTEND_API;
+  const clearAuth = useAuthStore(state => state.clearAuth);
+  
+  function handleLogout() {
+    if (clerkFrontendApi) {
+      // Clerk will handle signout via SignOutButton
+      return;
+    }
+    // Local logout
+    clearAuth();
+    window.location.href = '/login';
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="site-header text-white p-6 relative overflow-hidden">
@@ -16,6 +33,16 @@ function DashboardShell() {
               <p className="text-sm text-white/90 mt-1">
                 Pantau pH, suhu, dan aktivitas aquarium Anda secara realtime
               </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Conditional sign out button */}
+              {clerkFrontendApi ? (
+                <SignOutButton>
+                  <button className="text-sm bg-white/10 border border-white/20 text-white px-3 py-1 rounded">Keluar</button>
+                </SignOutButton>
+              ) : (
+                <button onClick={handleLogout} className="text-sm bg-white/10 border border-white/20 text-white px-3 py-1 rounded">Keluar</button>
+              )}
             </div>
             <div className="absolute top-0 right-0 opacity-10 text-6xl select-none">
               🌊
@@ -74,10 +101,32 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function ProtectedRoute({ children }) {
+  const clerkFrontendApi = import.meta.env.VITE_CLERK_FRONTEND_API;
+  
+  // If Clerk is configured, use Clerk's useUser
+  if (clerkFrontendApi) {
+    const { isLoaded, isSignedIn } = useUser();
+    if (!isLoaded) return <div className="p-6">Memuat...</div>;
+    if (!isSignedIn) return <Navigate to="/login" replace />;
+    return children;
+  }
+  
+  // Otherwise, use local auth store (zustand)
+  const token = useAuthStore(state => state.token);
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
 export default function App() {
   return (
     <Router>
-      <DashboardShell />
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardShell /></ProtectedRoute>} />
+      </Routes>
     </Router>
   );
 }
