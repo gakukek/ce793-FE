@@ -1,51 +1,25 @@
-import React, { useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AquariumList from "./components/AquariumList";
-import AuthPage from "./pages/authPage.jsx";
-import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
-import axios from "axios";
-import toast from "react-hot-toast";
-
-const API_BASE = "https://aquascape.onrender.com";
-
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { useAuthStore } from './stores/authStore';
 
 function DashboardShell() {
-  const { isSignedIn, getToken } = useAuth();
-  const syncAttemptedRef = useRef(false);
-
-  useEffect(() => {
-    if (!isSignedIn) return;
-    if (syncAttemptedRef.current) return; // Prevent duplicate calls
-
-    async function syncUser() {
-      syncAttemptedRef.current = true;
-      
-      try {
-        const token = await getToken({ template: "backend" });
-
-        if (!token) {
-          console.error("❌ No token received from Clerk");
-          syncAttemptedRef.current = false; // Allow retry if no token
-          return;
-        }
-
-        const response = await axios.post(`${API_BASE}/sync-user`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        console.log("✅ User synced:", response.data);
-        toast.success("Berhasil login!");
-      } catch (err) {
-        console.error("❌ Sync user error:", err.response?.data || err);
-        toast.error("Gagal sinkronisasi user");
-        syncAttemptedRef.current = false; // Allow retry on error
-      }
+  const clerkFrontendApi = import.meta.env.VITE_CLERK_FRONTEND_API;
+  const clearAuth = useAuthStore(state => state.clearAuth);
+  
+  function handleLogout() {
+    if (clerkFrontendApi) {
+      // Clerk will handle signout via SignOutButton
+      return;
     }
-
-    syncUser();
-  }, [isSignedIn, getToken]);
-
-
+    // Local logout
+    clearAuth();
+    window.location.href = '/login';
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="site-header text-white p-6 relative overflow-hidden">
@@ -59,6 +33,16 @@ function DashboardShell() {
               <p className="text-sm text-white/90 mt-1">
                 Pantau pH, suhu, dan aktivitas aquarium Anda secara realtime
               </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Conditional sign out button */}
+              {clerkFrontendApi ? (
+                <SignOutButton>
+                  <button className="text-sm bg-white/10 border border-white/20 text-white px-3 py-1 rounded">Keluar</button>
+                </SignOutButton>
+              ) : (
+                <button onClick={handleLogout} className="text-sm bg-white/10 border border-white/20 text-white px-3 py-1 rounded">Keluar</button>
+              )}
             </div>
             <div className="absolute top-0 right-0 opacity-10 text-6xl select-none">
               🌊
@@ -117,42 +101,32 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function ProtectedRoute({ children }) {
+  const clerkFrontendApi = import.meta.env.VITE_CLERK_FRONTEND_API;
+  
+  // If Clerk is configured, use Clerk's useUser
+  if (clerkFrontendApi) {
+    const { isLoaded, isSignedIn } = useUser();
+    if (!isLoaded) return <div className="p-6">Memuat...</div>;
+    if (!isSignedIn) return <Navigate to="/login" replace />;
+    return children;
+  }
+  
+  // Otherwise, use local auth store (zustand)
+  const token = useAuthStore(state => state.token);
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
-        <Routes>
-          {/* Public routes */}
-          <Route
-            path="/auth"
-            element={
-              <>
-                <SignedOut>
-                  <AuthPage />
-                </SignedOut>
-                <SignedIn>
-                  <Navigate to="/" replace />
-                </SignedIn>
-              </>
-            }
-          />
-
-          {/* Protected dashboard route */}
-          <Route
-            path="/*"
-            element={
-              <>
-                <SignedIn>
-                  <DashboardShell />
-                </SignedIn>
-                <SignedOut>
-                  <Navigate to="/auth" replace />
-                </SignedOut>
-              </>
-            }
-          />
-        </Routes>
-      </ErrorBoundary>
-    </BrowserRouter>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardShell /></ProtectedRoute>} />
+      </Routes>
+    </Router>
   );
 }

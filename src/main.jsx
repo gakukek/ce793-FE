@@ -3,15 +3,25 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider } from '@clerk/clerk-react';
 
-const PUBLISHABLE_KEY = "pk_test_ZmFjdHVhbC1wbGF0eXB1cy01Ny5jbGVyay5hY2NvdW50cy5kZXYk";
+// Use Clerk only when configured; avoid passing empty frontendApi which can cause runtime errors
+const clerkFrontendApi = import.meta.env.VITE_CLERK_FRONTEND_API;
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-      <App />
-      <Toaster position="top-right" />
-    </ClerkProvider>
+    {clerkFrontendApi ? (
+      <ClerkProvider frontendApi={clerkFrontendApi}>
+        <App />
+        <Toaster position="top-right" />
+      </ClerkProvider>
+    ) : (
+      <>
+        <App />
+        <Toaster position="top-right" />
+      </>
+    )}
   </React.StrictMode>
 );
