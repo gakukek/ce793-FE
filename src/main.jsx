@@ -9,7 +9,8 @@ const PUBLISHABLE_KEY = "pk_test_ZmFjdHVhbC1wbGF0eXB1cy01Ny5jbGVyay5hY2NvdW50cy5
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}
+      appearance={{ layout: { unsafe_disableDevelopmentModeWarnings: true } }}>
       <App />
       <Toaster position="top-right" />
     </ClerkProvider>
