@@ -18,7 +18,7 @@ export default function AddAquariumForm({ onAdded }) {
 
       await axios.post(`${API_BASE}/aquariums`, {
         name: form.name,
-        size_litres: Number(form.volume) || null, 
+        size_litres: Number(form.volume) || null,
         device_uid: form.device_uid,
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -54,19 +54,19 @@ export default function AddAquariumForm({ onAdded }) {
           />
           <input
             type="text"
-            placeholder="Lokasi"
-            className="border p-2 rounded w-1/3"
+            placeholder="Device UID (e.g., ABC123)"
             value={form.device_uid}
             onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
+            className="border rounded px-3 py-2"
           />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-        >
-          Tambah
-        </button>
-      </form>
+      </div>
+      <button
+        type="submit"
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+      >
+        Tambah
+      </button>
+    </form >
     </>
   );
 }
