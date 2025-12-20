@@ -12,20 +12,21 @@ const API_BASE = "https://aquascape.onrender.com";
 function DashboardShell() {
   const { isSignedIn, getToken } = useAuth();
   const syncAttemptedRef = useRef(false);
+  const [userSynced, setUserSynced] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn) return;
-    if (syncAttemptedRef.current) return; // Prevent duplicate calls
+    if (syncAttemptedRef.current) return;
 
     async function syncUser() {
       syncAttemptedRef.current = true;
-      
+
       try {
         const token = await getToken({ template: "backend" });
 
         if (!token) {
           console.error("❌ No token received from Clerk");
-          syncAttemptedRef.current = false; // Allow retry if no token
+          syncAttemptedRef.current = false;
           return;
         }
 
@@ -34,16 +35,28 @@ function DashboardShell() {
         });
 
         console.log("✅ User synced:", response.data);
+        setUserSynced(true);  // Set flag after sync completes
         toast.success("Berhasil login!");
       } catch (err) {
         console.error("❌ Sync user error:", err.response?.data || err);
         toast.error("Gagal sinkronisasi user");
-        syncAttemptedRef.current = false; // Allow retry on error
+        syncAttemptedRef.current = false;
       }
     }
 
     syncUser();
   }, [isSignedIn, getToken]);
+
+  if (!userSynced) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Menyinkronkan user...</p>
+        </div>
+      </div>
+    );
+  }
 
 
   return (
