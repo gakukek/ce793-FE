@@ -1,18 +1,13 @@
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url)
-
-    // Try to serve the static asset first
-    const response = await env.ASSETS.fetch(request)
-
-    // If asset exists, return it
-    if (response.status !== 404) {
-      return response
+    try {
+      // Try to serve the requested asset (JS, CSS, image, etc.)
+      return await env.ASSETS.fetch(request);
+    } catch (err) {
+      // SPA fallback: always return index.html
+      return await env.ASSETS.fetch(
+        new Request(new URL("/index.html", request.url))
+      );
     }
-
-    // SPA fallback → index.html
-    return env.ASSETS.fetch(
-      new Request(new URL('/index.html', request.url))
-    )
   }
-}
+};
