@@ -1,5 +1,6 @@
 {
-  "name": "ce793-fe",
+  // wrangler.jsonc
+  "name": "ce739-fe",
   "compatibility_date": "2025-12-02",
   "main": "worker.js",
   "assets": {
