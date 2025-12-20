@@ -3,7 +3,7 @@ import axios from "axios";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 
-const API_BASE = "https://aquascape.onrender.com/aquariums";
+const API_BASE = "https://aquascape.onrender.com";
 
 export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
   const [form, setForm] = useState({

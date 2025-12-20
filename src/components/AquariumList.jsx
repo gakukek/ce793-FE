@@ -47,7 +47,7 @@ export default function AquariumList() {
   async function deleteAquarium(id) {
     if (!window.confirm("Yakin ingin menghapus aquarium ini?")) return;
     try {
-      const token = await getToken(); // ✅ GET TOKEN
+      const token = await getToken({template: "backend"}); // ✅ GET TOKEN
       await axios.delete(`${API_BASE}/aquariums/${id}`, {
         headers: { Authorization: `Bearer ${token}` } // ✅ ADD HEADER
       });
