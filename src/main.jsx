@@ -5,7 +5,7 @@ import "./index.css";
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/clerk-react";
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuY2U3MzktZmUucGFnZXMuZGV2JA";
 
 console.log("CLERK KEY:", import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 
