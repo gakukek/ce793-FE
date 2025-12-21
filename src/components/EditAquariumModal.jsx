@@ -109,17 +109,6 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
             /></div>
           <div>
             <label className="block mb-1 text-sm font-medium text-gray-700">
-              Device UID
-            </label>
-            <input
-              className="input"
-              value={form.device_uid}
-              onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">
               Pengaturan Pakan
             </label>
 
