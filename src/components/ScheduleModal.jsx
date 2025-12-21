@@ -7,83 +7,89 @@ import { useAuth } from "@clerk/clerk-react";
 const API_BASE = "https://aquascape.onrender.com";
 
 export default function ScheduleModal({ aquarium, onClose, onSaved }) {
-  const [form, setForm] = useState({ feeding_volume_grams: "", feeding_period_hours: "" });
-  const [saving, setSaving] = useState(false);
-  const { getToken } = useAuth();
+    const [form, setForm] = useState({ feeding_volume_grams: "", feeding_period_hours: "" });
+    const [saving, setSaving] = useState(false);
+    const { getToken } = useAuth();
 
-  useEffect(() => {
-    if (!aquarium) return;
-    setForm({
-      feeding_volume_grams: aquarium.feeding_volume_grams ?? "",
-      feeding_period_hours: aquarium.feeding_period_hours ?? "",
-    });
-  }, [aquarium]);
+    useEffect(() => {
+        if (!aquarium) return;
+        setForm({
+            feeding_volume_grams: aquarium.feeding_volume_grams ?? "",
+            feeding_period_hours: aquarium.feeding_period_hours ?? "",
+        });
+    }, [aquarium]);
 
-  async function handleSave(e) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const token = await getToken({ template: "backend" });
-      await axios.put(`${API_BASE}/aquariums/${aquarium.id}`, {
-        user_id: aquarium.user_id,
-        feeding_volume_grams: form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
-        feeding_period_hours: form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success("Jadwal berhasil disimpan");
-      if (onSaved) onSaved();
-      onClose();
-    } catch (err) {
-      console.error("Gagal menyimpan jadwal:", err);
-      toast.error("Gagal menyimpan jadwal");
-    } finally {
-      setSaving(false);
+    async function handleSave(e) {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const token = await getToken({ template: "backend" });
+            await axios.put(`${API_BASE}/aquariums/${aquarium.id}`, {
+                // Include ALL existing aquarium fields
+                name: aquarium.name,
+                size_litres: aquarium.size_litres,
+                device_uid: aquarium.device_uid,
+                // Then update only the schedule fields
+                feeding_volume_grams: form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
+                feeding_period_hours: form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success("Jadwal berhasil disimpan");
+            if (onSaved) onSaved();
+            onClose();
+        } catch (err) {
+            console.error("❌ Full error:", err.response?.data);  // ✅ ADD THIS to see exact error
+            console.error("Gagal menyimpan jadwal:", err);
+            toast.error("Gagal menyimpan jadwal");
+        } finally {
+            setSaving(false);
+        }
     }
-  }
 
-  if (!aquarium) return null;
+    if (!aquarium) return null;
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Atur Jadwal untuk {aquarium.name}</h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
-            <XMarkIcon className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
+    return (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40"
+            style={{ zIndex: 9999 } }>
+                <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4" style={{ position: 'relative', zIndex: 10000 }}>
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold">Atur Jadwal untuk {aquarium.name}</h3>
+                        <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
+                            <XMarkIcon className="w-5 h-5 text-gray-600" />
+                        </button>
+                    </div>
 
-        <form onSubmit={handleSave} className="space-y-3">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Feeding volume (grams)</label>
-            <input
-              className="input"
-              value={form.feeding_volume_grams}
-              onChange={(e) => setForm({ ...form, feeding_volume_grams: e.target.value })}
-              placeholder="e.g. 1.5"
-              type="number"
-              step="0.01"
-            />
-          </div>
+                    <form onSubmit={handleSave} className="space-y-3">
+                        <div>
+                            <label className="block text-sm text-gray-600 mb-1">Feeding volume (grams)</label>
+                            <input
+                                className="input"
+                                value={form.feeding_volume_grams}
+                                onChange={(e) => setForm({ ...form, feeding_volume_grams: e.target.value })}
+                                placeholder="e.g. 1.5"
+                                type="number"
+                                step="0.01"
+                            />
+                        </div>
 
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Feeding period (hours)</label>
-            <input
-              className="input"
-              value={form.feeding_period_hours}
-              onChange={(e) => setForm({ ...form, feeding_period_hours: e.target.value })}
-              placeholder="e.g. 8"
-              type="number"
-            />
-          </div>
+                        <div>
+                            <label className="block text-sm text-gray-600 mb-1">Feeding period (hours)</label>
+                            <input
+                                className="input"
+                                value={form.feeding_period_hours}
+                                onChange={(e) => setForm({ ...form, feeding_period_hours: e.target.value })}
+                                placeholder="e.g. 8"
+                                type="number"
+                            />
+                        </div>
 
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-3 py-1 rounded btn-secondary">Batal</button>
-            <button type="submit" className="px-3 py-1 rounded sea-btn" disabled={saving}>{saving ? "Menyimpan..." : "Simpan Jadwal"}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+                        <div className="flex justify-end gap-2">
+                            <button type="button" onClick={onClose} className="px-3 py-1 rounded btn-secondary">Batal</button>
+                            <button type="submit" className="px-3 py-1 rounded sea-btn" disabled={saving}>{saving ? "Menyimpan..." : "Simpan Jadwal"}</button>
+                        </div>
+                    </form>
+                </div>
+        </ div>
+            );
 }
