@@ -58,7 +58,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
       },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ FIX
+            Authorization: `Bearer ${token}`, 
           },
         });
       onSaved();
@@ -107,17 +107,6 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
               type="number"
               step="0.01"
             /></div>
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">
-              Device UID
-            </label>
-            <input
-              className="input"
-              value={form.device_uid}
-              onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
-              required
-            />
-          </div>
 
             <div className="flex gap-2">
               <div className="flex-1">

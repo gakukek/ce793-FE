@@ -3,11 +3,14 @@ import axios from "axios";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
 import { useAuth } from "@clerk/clerk-react";
+import ScheduleModal from "./ScheduleModal"; // added
 
 const API_BASE = "https://aquascape.onrender.com";
 
 export default function AddAquariumForm({ onAdded }) {
   const [form, setForm] = useState({ name: "", volume: "", device_uid: "" });
+  const [showSchedule, setShowSchedule] = useState(false); // added
+  const [createdAquarium, setCreatedAquarium] = useState(null); // added
   const { getToken, userId } = useAuth();
 
   async function handleSubmit(e) {
@@ -26,7 +29,12 @@ export default function AddAquariumForm({ onAdded }) {
 
       const created = res.data;
       setForm({ name: "", volume: "", device_uid: "" });
-      // pass created aquarium back to parent so it can open schedule modal
+
+      // open schedule modal for the created aquarium
+      setCreatedAquarium(created);
+      setShowSchedule(true);
+
+      // pass created aquarium back to parent as well
       if (onAdded) onAdded(created);
       toast.success("Aquarium berhasil ditambahkan!");
     } catch (err) {
@@ -34,6 +42,12 @@ export default function AddAquariumForm({ onAdded }) {
       toast.error("Gagal menambah aquarium!");
     }
   }
+
+  const closeSchedule = () => {
+    setShowSchedule(false);
+    setCreatedAquarium(null);
+  };
+
   return (
     <>
       <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg shadow mb-4">
@@ -69,6 +83,13 @@ export default function AddAquariumForm({ onAdded }) {
         Tambah
       </button>
     </form >
+
+    {showSchedule && createdAquarium && (
+      <ScheduleModal
+        aquarium={createdAquarium}
+        onClose={closeSchedule}
+      />
+    )}
     </>
   );
 }
