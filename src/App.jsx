@@ -12,40 +12,34 @@ const API_BASE = "https://aquascape.onrender.com";
 function DashboardShell() {
   const { isSignedIn, getToken } = useAuth();
   const syncAttemptedRef = useRef(false);
-  const [userSynced, setUserSynced] = useState(false);
 
   useEffect(() => {
-    if (!isSignedIn) return;
-    if (syncAttemptedRef.current) return;
+  if (!isSignedIn) return;
+  if (syncAttemptedRef.current) return;
 
-    async function syncUser() {
-      syncAttemptedRef.current = true;
+  async function syncUser() {
+    syncAttemptedRef.current = true;
 
-      try {
-        const token = await getToken({ template: "backend" });
+    try {
+      const token = await getToken({ template: "backend" });
+      if (!token) return;
 
-        if (!token) {
-          console.error("❌ No token received from Clerk");
-          syncAttemptedRef.current = false;
-          return;
-        }
+      await axios.post(`${API_BASE}/sync-user`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-        const response = await axios.post(`${API_BASE}/sync-user`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        console.log("✅ User synced:", response.data);
-        setUserSynced(true);  // Set flag after sync completes
-        toast.success("Berhasil login!");
-      } catch (err) {
-        console.error("❌ Sync user error:", err.response?.data || err);
-        toast.error("Gagal sinkronisasi user");
-        syncAttemptedRef.current = false;
-      }
+      console.log("✅ User synced");
+      toast.success("Berhasil login!");
+    } catch (err) {
+      console.error("❌ Sync user error:", err);
+      toast.error("Sinkronisasi user gagal (akan dicoba lagi)");
+      syncAttemptedRef.current = false; // allow retry
     }
+  }
 
-    syncUser();
-  }, [isSignedIn, getToken]);
+  syncUser();
+}, [isSignedIn, getToken]);
+
 
   if (!userSynced) {
     return (
