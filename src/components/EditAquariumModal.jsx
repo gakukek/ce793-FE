@@ -34,7 +34,6 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
       await axios.put(
         `${API_BASE}/aquariums/${aquarium.id}`,
         {
-          user_id: aquarium.user_id,
           name: form.name,
           size_litres: form.size_litres === "" ? null : Number(form.size_litres),
           device_uid: form.device_uid,
