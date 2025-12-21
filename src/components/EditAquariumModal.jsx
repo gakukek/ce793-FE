@@ -7,6 +7,7 @@ import { useAuth } from "@clerk/clerk-react";
 const API_BASE = "https://aquascape.onrender.com";
 
 export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
+  const { getToken } = useAuth();
   const [form, setForm] = useState({
     name: aquarium.name || "",
     size_litres: aquarium.size_litres ?? "",
@@ -53,6 +54,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
     } catch (err) {
       console.error("Gagal menyimpan aquarium:", err);
       toast.error("Gagal menyimpan");
+      toast.error(err.response?.data?.message || "Gagal menyimpan");
     } finally {
       setSaving(false);
     }
