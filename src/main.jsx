@@ -5,13 +5,13 @@ import "./index.css";
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/clerk-react";
 
-const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuY2U3MzktZmUucGFnZXMuZGV2JA";
+const PUBLISHABLE_KEY = "pk_test_ZmFjdHVhbC1wbGF0eXB1cy01Ny5jbGVyay5hY2NvdW50cy5kZXYk";
 
 console.log("PUBLISHABLE KEY:", import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} frontendApi="js.clerk.dev"
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}
       appearance={{ layout: { unsafe_disableDevelopmentModeWarnings: true } }}>
       <App />
       <Toaster position="top-right" />
