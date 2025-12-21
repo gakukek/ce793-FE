@@ -56,45 +56,76 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-3">
-          <input
-            className="input"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Nama Aquarium"
-            required
-          />
-          <input
-            className="input"
-            value={form.size_litres}
-            onChange={(e) => setForm({ ...form, size_litres: e.target.value })}
-            placeholder="Volume (L)"
-            type="number"
-            step="0.01"
-          />
-          <input
-            className="input"
-            value={form.device_uid}
-            onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
-            placeholder="Device UID"
-            required
-          />
-          <div className="flex gap-2">
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Nama Aquarium
+            </label>
             <input
-              className="input flex-1"
-              value={form.feeding_volume_grams}
-              onChange={(e) => setForm({ ...form, feeding_volume_grams: e.target.value })}
-              placeholder="Feeding volume (g)"
+              className="input"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Nama Aquarium"
+              required
+            />
+          </div>
+          <div><label className="block mb-1 text-sm font-medium text-gray-700">
+            Volume Aquarium (Liter)
+          </label>
+            <input
+              className="input"
+              value={form.size_litres}
+              onChange={(e) => setForm({ ...form, size_litres: e.target.value })}
+              placeholder="Volume (L)"
               type="number"
               step="0.01"
-            />
+            /></div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Device UID
+            </label>
             <input
-              className="input w-28"
-              value={form.feeding_period_hours}
-              onChange={(e) => setForm({ ...form, feeding_period_hours: e.target.value })}
-              placeholder="Period h"
-              type="number"
+              className="input"
+              value={form.device_uid}
+              onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
+              required
             />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Pengaturan Pakan
+            </label>
+
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block mb-1 text-xs text-gray-500">
+                  Volume per Pakan (gram)
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  step="0.01"
+                  value={form.feeding_volume_grams}
+                  onChange={(e) =>
+                    setForm({ ...form, feeding_volume_grams: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="w-28">
+                <label className="block mb-1 text-xs text-gray-500">
+                  Interval (jam)
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  value={form.feeding_period_hours}
+                  onChange={(e) =>
+                    setForm({ ...form, feeding_period_hours: e.target.value })
+                  }
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">
