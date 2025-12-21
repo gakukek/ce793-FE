@@ -7,15 +7,14 @@ import { ClerkProvider } from "@clerk/clerk-react";
 
 const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuY2U3MzktZmUucGFnZXMuZGV2JA";
 
-console.log("CLERK KEY:", import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+console.log("PUBLISHABLE KEY:", import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} frontendApi="js.clerk.dev"
       appearance={{ layout: { unsafe_disableDevelopmentModeWarnings: true } }}>
       <App />
       <Toaster position="top-right" />
     </ClerkProvider>
   </React.StrictMode>
 );
-
