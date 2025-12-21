@@ -24,6 +24,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
   }, [onClose]);
 
   async function handleSave(e) {
+    const token = await getToken();
     e.preventDefault();
     setSaving(true);
     try {
@@ -34,7 +35,12 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
         device_uid: form.device_uid,
         feeding_volume_grams: form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
         feeding_period_hours: form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
-      });
+      },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ FIX
+          },
+        });
       onSaved();
       onClose();
       toast.success("Perubahan disimpan");
