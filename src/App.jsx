@@ -96,12 +96,10 @@ function DashboardShell() {
           <AquariumList />
         </div>
       </main>
-      {/* Fixed Bottom-Right Sign Out Button */}
-      <div className="fixed bottom-6 right-6 z-40">
+      <div className="fixed bottom-6 right-6" style={{ zIndex: 1000 }}>
         <SignOutButton>
-          <button className="btn-danger shadow-2xl">
-            <span className="btn-icon">🚪</span>
-            <span>Sign Out</span>
+          <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg transition">
+            🚪 Sign Out
           </button>
         </SignOutButton>
       </div>
