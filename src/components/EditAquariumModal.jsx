@@ -58,7 +58,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
       },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ FIX
+            Authorization: `Bearer ${token}`, 
           },
         });
       onSaved();
