@@ -6,11 +6,13 @@ import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/clerk-react";
 
 const VITE_CLERK_PUBLISHABLE_KEY =
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  "pk_live_Y2xlcmsuY2U3MzktZmUucGFnZXMuZGV2JA";
 
-if (!VITE_CLERK_PUBLISHABLE_KEY) {
-  const VITE_CLERK_PUBLISHABLE_KEY="pk_live_Y2xlcmsuY2U3MzktZmUucGFnZXMuZGV2JA";
-  console.log(VITE_CLERK_PUBLISHABLE_KEY);
+if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
+  console.warn(
+    "VITE_CLERK_PUBLISHABLE_KEY not set in environment; using fallback publishable key.\nSet VITE_CLERK_PUBLISHABLE_KEY in your host (e.g., Cloudflare Pages, Vercel) and redeploy."
+  );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
