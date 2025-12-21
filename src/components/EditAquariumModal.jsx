@@ -118,10 +118,6 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
               required
             />
           </div>
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">
-              Pengaturan Pakan
-            </label>
 
             <div className="flex gap-2">
               <div className="flex-1">
@@ -138,22 +134,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
                   }
                 />
               </div>
-
-              <div className="w-28">
-                <label className="block mb-1 text-xs text-gray-500">
-                  Interval (jam)
-                </label>
-                <input
-                  className="input"
-                  type="number"
-                  value={form.feeding_period_hours}
-                  onChange={(e) =>
-                    setForm({ ...form, feeding_period_hours: e.target.value })
-                  }
-                />
-              </div>
             </div>
-          </div>
 
           <div className="flex justify-end gap-2 mt-4">
             <button type="button" onClick={onClose} className="action-btn ghost">
