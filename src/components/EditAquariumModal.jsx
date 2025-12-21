@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import { useAuth } from "@clerk/clerk-react";
 
 const API_BASE = "https://aquascape.onrender.com";
 
@@ -27,14 +28,25 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await axios.put(`${API_BASE}/aquariums/${aquarium.id}`, {
-        user_id: aquarium.user_id,
-        name: form.name,
-        size_litres: form.size_litres === "" ? null : Number(form.size_litres),
-        device_uid: form.device_uid,
-        feeding_volume_grams: form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
-        feeding_period_hours: form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
-      });
+      const token = await getToken({ template: "backend" });
+  
+      await axios.put(
+        `${API_BASE}/aquariums/${aquarium.id}`,
+        {
+          user_id: aquarium.user_id,
+          name: form.name,
+          size_litres: form.size_litres === "" ? null : Number(form.size_litres),
+          device_uid: form.device_uid,
+          feeding_volume_grams:
+            form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
+          feeding_period_hours:
+            form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
       onSaved();
       onClose();
       toast.success("Perubahan disimpan");
@@ -44,7 +56,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
     } finally {
       setSaving(false);
     }
-  }
+  }  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">

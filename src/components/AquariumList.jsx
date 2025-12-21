@@ -44,6 +44,32 @@ export default function AquariumList() {
     }
   }
 
+  // Edit table
+  useEffect(() => {
+    async function setAxiosAuth() {
+      const token = await getToken({ template: "backend" });
+      if (token) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      }
+    }
+    setAxiosAuth();
+  }, [getToken]);
+  
+  useEffect(() => {
+    let mounted = true;
+  
+    (async () => {
+      const token = await getToken({ template: "backend" });
+      if (token && mounted) {
+        axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+      }
+    })();
+  
+    return () => {
+      mounted = false;
+    };
+  }, [getToken]);
+
   // Delete aquarium
   async function deleteAquarium(id) {
     if (!window.confirm("Yakin ingin menghapus aquarium ini?")) return;
@@ -134,17 +160,6 @@ export default function AquariumList() {
   useEffect(() => {
     fetchAquariums();
   }, []);
-
-  useEffect(() => {
-  async function setAxiosAuth() {
-    const token = await getToken({ template: "backend" });
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    }
-  }
-  setAxiosAuth();
-}, [getToken]);
-
 
   // Filter search
   const filtered = useMemo(() => {
