@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AquariumList from "./components/AquariumList";
 import AuthPage from "./pages/authPage.jsx";
-import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useAuth, SignOutButton } from "@clerk/clerk-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
