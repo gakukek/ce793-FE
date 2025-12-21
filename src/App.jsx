@@ -12,46 +12,51 @@ const API_BASE = "https://aquascape.onrender.com";
 function DashboardShell() {
   const { isSignedIn, getToken } = useAuth();
   const syncAttemptedRef = useRef(false);
-  const [userSynced, setUserSynced] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
 
   useEffect(() => {
-  if (!isSignedIn) return;
-  if (syncAttemptedRef.current) return;
+    if (!isSignedIn) return;
+    if (syncAttemptedRef.current) return;
 
-  async function syncUser() {
-    syncAttemptedRef.current = true;
+    async function syncUser() {
+      syncAttemptedRef.current = true;
+      setSyncing(true);
 
-    try {
-      const token = await getToken({ template: "backend" });
-      if (!token) return;
+      try {
+        const token = await getToken({ template: "backend" });
+        if (!token) return;
 
-      await axios.post(`${API_BASE}/sync-user`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+        await axios.post(`${API_BASE}/sync-user`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      console.log("✅ User synced");
-      toast.success("Berhasil login!");
-    } catch (err) {
-      console.error("❌ Sync user error:", err);
-      toast.error("Sinkronisasi user gagal (akan dicoba lagi)");
-      syncAttemptedRef.current = false; // allow retry
+        toast.success("Berhasil login!");
+      } catch (err) {
+        console.error("❌ Sync user error:", err);
+        toast.error("Sinkronisasi user gagal");
+        syncAttemptedRef.current = false;
+      } finally {
+        setSyncing(false);
+      }
     }
-  }
 
-  syncUser();
-}, [isSignedIn, getToken]);
+    syncUser();
+  }, [isSignedIn, getToken]);
 
 
-  if (!userSynced) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Menyinkronkan user...</p>
+
+  {
+    syncing && (
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 shadow">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2" />
+          <p className="text-gray-600 text-sm">Menyinkronkan user…</p>
         </div>
       </div>
-    );
+    )
   }
+
 
 
   return (
