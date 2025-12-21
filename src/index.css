@@ -28,6 +28,37 @@ body {
   --brand-bg: linear-gradient(90deg, rgba(11,127,174,0.12), rgba(14,165,233,0.06));
 }
 
+/* Fixed Sign Out Button - Bottom Right */
+.fixed-signout {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.fixed-signout button {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transition: all 0.2s ease;
+}
+
+.fixed-signout button:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.fixed-signout button:active {
+  transform: translateY(0);
+}
+
 /* improved buttons */
 .sea-btn {
   background-color: var(--sea-blue);
