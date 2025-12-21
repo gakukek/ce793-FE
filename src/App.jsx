@@ -92,16 +92,14 @@ function DashboardShell() {
       </header>
 
       <main className="site-container p-6">
-        <AquariumList />
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <AquariumList />
+        </div>
       </main>
       <SignOutButton>
-        <button className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200">
-          <span className="flex items-center gap-2">
-            <span>Sign Out</span>
-          </span>
-        </button>
+        <button className="btn btn-danger">Sign Out</button>
       </SignOutButton>
-    </div>
+    </div >
   );
 }
 
