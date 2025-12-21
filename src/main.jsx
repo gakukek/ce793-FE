@@ -9,7 +9,10 @@ const VITE_CLERK_PUBLISHABLE_KEY =
   import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!VITE_CLERK_PUBLISHABLE_KEY) {
+  VITE_CLERK_PUBLISHABLE_KEY="pk_live_Y2xlcmsuY2U3MzktZmUucGFnZXMuZGV2JA";
+  console.log(VITE_CLERK_PUBLISHABLE_KEY);
   throw new Error("Missing Clerk publishable key");
+
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -22,4 +25,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   </React.StrictMode>
 );
 
-// ini anejh
