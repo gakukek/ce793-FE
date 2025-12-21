@@ -12,6 +12,7 @@ const API_BASE = "https://aquascape.onrender.com";
 function DashboardShell() {
   const { isSignedIn, getToken } = useAuth();
   const syncAttemptedRef = useRef(false);
+  const [userSynced, setUserSynced] = useState(false);
 
   useEffect(() => {
   if (!isSignedIn) return;
