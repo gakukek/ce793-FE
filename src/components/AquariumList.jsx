@@ -29,25 +29,41 @@ export default function AquariumList() {
   // Fetch aquariums
   async function fetchAquariums() {
     setLoading(true);
-    console.log("🔄 Fetching aquariums..."); // ✅ ADD THIS
-    try {
-      const token = await getToken({ template: "backend" });
-      console.log("✅ Got token, calling API..."); // ✅ ADD THIS
+    console.log("🔄 Fetching aquariums...");
 
-      const res = await axios.get(`${API_BASE}/aquariums`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    let attempts = 0;
+    const maxAttempts = 2;
 
-      console.log("✅ Aquariums loaded:", res.data.length); // ✅ ADD THIS
-      setAquariums(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("❌ Error fetching aquariums:", err);
-      console.error("❌ Error details:", err.response?.data); // ✅ ADD THIS
-      toast.error("Gagal memuat daftar aquarium");
-      setAquariums([]);
-    } finally {
-      setLoading(false);
+    while (attempts < maxAttempts) {
+      try {
+        const token = await getToken({ template: "backend" });
+        console.log("✅ Got token, calling API...");
+
+        const res = await axios.get(`${API_BASE}/aquariums`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 30000  // ✅ 30 second timeout for cold start
+        });
+
+        console.log("✅ Aquariums loaded:", res.data.length);
+        setAquariums(Array.isArray(res.data) ? res.data : []);
+        break;  // Success, exit loop
+
+      } catch (err) {
+        attempts++;
+        console.error(`❌ Attempt ${attempts} failed:`, err.message);
+
+        if (attempts < maxAttempts) {
+          console.log("🔄 Retrying in 2 seconds...");
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          console.error("❌ Error fetching aquariums:", err);
+          toast.error("Backend is starting up, please wait...");
+          setAquariums([]);
+        }
+      }
     }
+
+    setLoading(false);
   }
 
   // Delete aquarium
