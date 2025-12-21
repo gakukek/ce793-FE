@@ -26,6 +26,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
   }, [onClose]);
 
   async function handleSave(e) {
+    const token = await getToken();
     e.preventDefault();
     setSaving(true);
     try {
@@ -47,6 +48,19 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
         }
       );
   
+      await axios.put(`${API_BASE}/aquariums/${aquarium.id}`, {
+        user_id: aquarium.user_id,
+        name: form.name,
+        size_litres: form.size_litres === "" ? null : Number(form.size_litres),
+        device_uid: form.device_uid,
+        feeding_volume_grams: form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
+        feeding_period_hours: form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
+      },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ FIX
+          },
+        });
       onSaved();
       onClose();
       toast.success("Perubahan disimpan");
@@ -60,57 +74,88 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
   }  
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Edit Aquarium</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
             <XMarkIcon className="w-5 h-5 text-gray-600" />
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-3">
-          <input
-            className="input"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Nama Aquarium"
-            required
-          />
-          <input
-            className="input"
-            value={form.size_litres}
-            onChange={(e) => setForm({ ...form, size_litres: e.target.value })}
-            placeholder="Volume (L)"
-            type="number"
-            step="0.01"
-          />
-          <input
-            className="input"
-            value={form.device_uid}
-            onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
-            placeholder="Device UID"
-            required
-          />
-          <div className="flex gap-2">
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Nama Aquarium
+            </label>
             <input
-              className="flex-1 border p-2 rounded"
-              value={form.feeding_volume_grams}
-              onChange={(e) => setForm({ ...form, feeding_volume_grams: e.target.value })}
-              placeholder="Feeding volume (g)"
-              type="number"
-              step="0.01"
-            />
-            <input
-              className="w-28 border p-2 rounded"
-              value={form.feeding_period_hours}
-              onChange={(e) => setForm({ ...form, feeding_period_hours: e.target.value })}
-              placeholder="Period h"
-              type="number"
+              className="input"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Nama Aquarium"
+              required
             />
           </div>
+          <div><label className="block mb-1 text-sm font-medium text-gray-700">
+            Volume Aquarium (Liter)
+          </label>
+            <input
+              className="input"
+              value={form.size_litres}
+              onChange={(e) => setForm({ ...form, size_litres: e.target.value })}
+              placeholder="Volume (L)"
+              type="number"
+              step="0.01"
+            /></div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Device UID
+            </label>
+            <input
+              className="input"
+              value={form.device_uid}
+              onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Pengaturan Pakan
+            </label>
 
-          <div className="flex justify-end gap-2">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block mb-1 text-xs text-gray-500">
+                  Volume per Pakan (gram)
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  step="0.01"
+                  value={form.feeding_volume_grams}
+                  onChange={(e) =>
+                    setForm({ ...form, feeding_volume_grams: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="w-28">
+                <label className="block mb-1 text-xs text-gray-500">
+                  Interval (jam)
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  value={form.feeding_period_hours}
+                  onChange={(e) =>
+                    setForm({ ...form, feeding_period_hours: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
             <button type="button" onClick={onClose} className="action-btn ghost">
               Batal
             </button>

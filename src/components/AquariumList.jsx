@@ -29,19 +29,41 @@ export default function AquariumList() {
   // Fetch aquariums
   async function fetchAquariums() {
     setLoading(true);
-    try {
-      const token = await getToken({ template: "backend" });
-      const res = await axios.get(`${API_BASE}/aquariums`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAquariums(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("❌ Error fetching aquariums:", err);
-      toast.error("Gagal memuat daftar aquarium");
-      setAquariums([]);
-    } finally {
-      setLoading(false);
+    console.log("🔄 Fetching aquariums...");
+
+    let attempts = 0;
+    const maxAttempts = 2;
+
+    while (attempts < maxAttempts) {
+      try {
+        const token = await getToken({ template: "backend" });
+        console.log("✅ Got token, calling API...");
+
+        const res = await axios.get(`${API_BASE}/aquariums`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 30000  // ✅ 30 second timeout for cold start
+        });
+
+        console.log("✅ Aquariums loaded:", res.data.length);
+        setAquariums(Array.isArray(res.data) ? res.data : []);
+        break;  // Success, exit loop
+
+      } catch (err) {
+        attempts++;
+        console.error(`❌ Attempt ${attempts} failed:`, err.message);
+
+        if (attempts < maxAttempts) {
+          console.log("🔄 Retrying in 2 seconds...");
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          console.error("❌ Error fetching aquariums:", err);
+          toast.error("Backend is starting up, please wait...");
+          setAquariums([]);
+        }
+      }
     }
+
+    setLoading(false);
   }
 
   // Edit table
@@ -293,7 +315,7 @@ export default function AquariumList() {
                         <ChartBarIcon className="w-4 h-4" />
                         <span>Grafik</span>
                       </button>
-                      
+
                       <button
                         className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition"
                         onClick={() => openEdit(aq)}
@@ -301,7 +323,7 @@ export default function AquariumList() {
                         <PencilSquareIcon className="w-4 h-4" />
                         <span>Edit</span>
                       </button>
-                      
+
                       <button
                         className="bg-red-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-red-600 transition"
                         onClick={() => deleteAquarium(aq.id)}
