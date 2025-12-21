@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import AddAquariumForm from "./AddAquariumForm";
 import SensorChart from "./SensorChart";
 import EditAquariumModal from "./EditAquariumModal";
+import ScheduleModal from "./ScheduleModal";
 import { useAuth } from "@clerk/clerk-react";
 import {
   MagnifyingGlassIcon,
@@ -12,44 +13,66 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
-// ✅ Gunakan base URL backend TANPA /aquariums di ujung
 const API_BASE = "https://aquascape.onrender.com";
 
 export default function AquariumList() {
   const [aquariums, setAquariums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
+  const [scheduleTarget, setScheduleTarget] = useState(null);
   const [selectedSensorData, setSelectedSensorData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [query, setQuery] = useState("");
 
-  const { getToken } = useAuth(); // ✅ ADD THIS
+  const { getToken } = useAuth();
 
-  // ✅ Ambil data aquarium WITH AUTH
+  // Fetch aquariums
   async function fetchAquariums() {
     setLoading(true);
-    try {
-      const token = await getToken(); // ✅ GET TOKEN
-      const res = await axios.get(`${API_BASE}/aquariums`, {
-        headers: { Authorization: `Bearer ${token}` } // ✅ ADD HEADER
-      });
-      setAquariums(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("❌ Error fetching aquariums:", err);
-      toast.error("Gagal memuat daftar aquarium");
-      setAquariums([]);
-    } finally {
-      setLoading(false);
+    console.log("🔄 Fetching aquariums...");
+
+    let attempts = 0;
+    const maxAttempts = 2;
+
+    while (attempts < maxAttempts) {
+      try {
+        const token = await getToken({ template: "backend" });
+        console.log("✅ Got token, calling API...");
+
+        const res = await axios.get(`${API_BASE}/aquariums`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 30000  // ✅ 30 second timeout for cold start
+        });
+
+        console.log("✅ Aquariums loaded:", res.data.length);
+        setAquariums(Array.isArray(res.data) ? res.data : []);
+        break;  // Success, exit loop
+
+      } catch (err) {
+        attempts++;
+        console.error(`❌ Attempt ${attempts} failed:`, err.message);
+
+        if (attempts < maxAttempts) {
+          console.log("🔄 Retrying in 2 seconds...");
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          console.error("❌ Error fetching aquariums:", err);
+          toast.error("Backend is starting up, please wait...");
+          setAquariums([]);
+        }
+      }
     }
+
+    setLoading(false);
   }
 
-  // ✅ Hapus aquarium WITH AUTH
+  // Delete aquarium
   async function deleteAquarium(id) {
     if (!window.confirm("Yakin ingin menghapus aquarium ini?")) return;
     try {
-      const token = await getToken(); // ✅ GET TOKEN
+      const token = await getToken({ template: "backend" });
       await axios.delete(`${API_BASE}/aquariums/${id}`, {
-        headers: { Authorization: `Bearer ${token}` } // ✅ ADD HEADER
+        headers: { Authorization: `Bearer ${token}` }
       });
       fetchAquariums();
       toast.success("Aquarium dihapus");
@@ -59,7 +82,24 @@ export default function AquariumList() {
     }
   }
 
-  // ✅ Edit mode
+  async function sendFeedCommand(aquarium) {
+    try {
+      const token = await getToken({ template: "backend" });
+      await axios.post(`${API_BASE}/alerts`, {
+        aquarium_id: aquarium.id,
+        type: "CMD_FEED",
+        message: `Manual feed command for ${aquarium.name}`
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`🍽️ Feed command sent to ${aquarium.name}!`);
+    } catch (err) {
+      console.error("❌ Failed to send feed command:", err);
+      toast.error("Gagal mengirim perintah makan");
+    }
+  }
+
+  // Edit mode
   function openEdit(aq) {
     setEditing(aq);
   }
@@ -67,13 +107,13 @@ export default function AquariumList() {
     setEditing(null);
   }
 
-  // ✅ Ambil data sensor WITH AUTH
+  // Fetch sensor data
   async function showSensorChartFor(aq) {
     setChartLoading(true);
     try {
-      const token = await getToken(); // ✅ GET TOKEN
+      const token = await getToken({ template: "backend" });
       const res = await axios.get(`${API_BASE}/sensor_data?aquarium_id=${aq.id}`, {
-        headers: { Authorization: `Bearer ${token}` } // ✅ ADD HEADER
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (Array.isArray(res.data) && res.data.length > 0) {
@@ -116,7 +156,14 @@ export default function AquariumList() {
     fetchAquariums();
   }, []);
 
-  // ✅ Filter pencarian
+  function openSchedule(aq) {
+    setScheduleTarget(aq);
+  }
+  function closeSchedule() {
+    setScheduleTarget(null);
+  }
+
+  // Filter search
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return aquariums;
@@ -154,7 +201,7 @@ export default function AquariumList() {
         </div>
       </div>
 
-      {/* Statistik ringkas */}
+      {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
           <div className="flex items-start justify-between">
@@ -179,25 +226,14 @@ export default function AquariumList() {
                 {filtered.length}
               </p>
             </div>
-            <div className="text-purple-500 bg-purple-50 p-3 rounded-lg">🔍</div>
+            <div className="text-purple-500 bg-purple-50 p-3 rounded-lg">📊</div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
-          {/* <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">
-                Status Server
-              </h3>
-              <p className="text-3xl font-bold text-green-600">Online</p>
-            </div>
-            <div className="text-green-500 bg-green-50 p-3 rounded-lg">✨</div>
-          </div> */}
         </div>
       </div>
 
-      <AddAquariumForm onAdded={fetchAquariums} />
+      <AddAquariumForm onAdded={(created) => { fetchAquariums(); if (created) openSchedule(created); }} />
 
-      {/* Daftar Aquarium */}
+      {/* Aquarium List */}
       {loading ? (
         <p className="text-center text-gray-500">Memuat data...</p>
       ) : filtered.length === 0 ? (
@@ -222,11 +258,8 @@ export default function AquariumList() {
                   Volume (L)
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                  Lokasi
+                  Device UID
                 </th>
-                {/* <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                  Owner
-                </th> */}
                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">
                   Aksi
                 </th>
@@ -238,32 +271,41 @@ export default function AquariumList() {
                   key={aq.id}
                   className="odd:bg-white even:bg-gray-50 hover:bg-gray-100"
                 >
-                  <td className="px-6 py-4">{aq.name}</td>
-                  <td className="px-6 py-4">{aq.size_litres ?? "—"}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{aq.name}</td>
+                  <td className="px-6 py-4">{aq.size_litres ?? "–"}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {aq.device_uid}
+                    {aq.device_uid || <span className="text-gray-400 italic">No device</span>}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {aq.user_id}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="inline-flex gap-2 justify-center">
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-2 justify-center">
                       <button
-                        className="bg-blue-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition"
+                        className={`action-btn primary ${!aq.device_uid ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        onClick={() => sendFeedCommand(aq)}
+                        disabled={!aq.device_uid}
+                        title={!aq.device_uid ? "No device connected" : "Send feed command"}
+                      >
+                        <span>🍽️</span>
+                        <span>Feed</span>
+                      </button>
+
+                      <button
+                        className="action-btn"
                         onClick={() => showSensorChartFor(aq)}
                       >
                         <ChartBarIcon className="w-4 h-4" />
                         <span>Grafik</span>
                       </button>
+
                       <button
-                        className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition"
+                        className="action-btn ghost"
                         onClick={() => openEdit(aq)}
                       >
                         <PencilSquareIcon className="w-4 h-4" />
                         <span>Edit</span>
                       </button>
+
                       <button
-                        className="bg-red-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-red-600 transition"
+                        className="action-btn danger"
                         onClick={() => deleteAquarium(aq.id)}
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -287,6 +329,14 @@ export default function AquariumList() {
         <EditAquariumModal
           aquarium={editing}
           onClose={closeEdit}
+          onSaved={fetchAquariums}
+        />
+      )}
+
+      {scheduleTarget && (
+        <ScheduleModal
+          aquarium={scheduleTarget}
+          onClose={closeSchedule}
           onSaved={fetchAquariums}
         />
       )}

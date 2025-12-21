@@ -16,16 +16,18 @@ export default function AddAquariumForm({ onAdded }) {
     try {
       const token = await getToken();
 
-      await axios.post(`${API_BASE}/aquariums`, {
+      const res = await axios.post(`${API_BASE}/aquariums`, {
         name: form.name,
-        size_litres: Number(form.volume) || null, 
+        size_litres: Number(form.volume) || null,
         device_uid: form.device_uid,
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      const created = res.data;
       setForm({ name: "", volume: "", device_uid: "" });
-      onAdded();
+      // pass created aquarium back to parent so it can open schedule modal
+      if (onAdded) onAdded(created);
       toast.success("Aquarium berhasil ditambahkan!");
     } catch (err) {
       console.error("❌ Gagal menambah aquarium:", err);
@@ -40,7 +42,7 @@ export default function AddAquariumForm({ onAdded }) {
           <input
             type="text"
             placeholder="Nama aquarium"
-            className="border p-2 rounded w-1/3"
+            className="input w-1/3"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
@@ -48,25 +50,25 @@ export default function AddAquariumForm({ onAdded }) {
           <input
             type="number"
             placeholder="Volume (L)"
-            className="border p-2 rounded w-1/3"
+            className="input w-1/3"
             value={form.volume}
             onChange={(e) => setForm({ ...form, volume: e.target.value })}
           />
           <input
             type="text"
-            placeholder="Lokasi"
-            className="border p-2 rounded w-1/3"
+            placeholder="Device UID (tercatat di Device)"
             value={form.device_uid}
             onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
+            className="input w-1/3"
           />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-        >
-          Tambah
-        </button>
-      </form>
+      </div>
+      <button
+        type="submit"
+        className="action-btn primary"
+      >
+        Tambah
+      </button>
+    </form >
     </>
   );
 }

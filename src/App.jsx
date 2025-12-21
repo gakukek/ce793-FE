@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AquariumList from "./components/AquariumList";
 import AuthPage from "./pages/authPage.jsx";
-import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useAuth, SignOutButton } from "@clerk/clerk-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -12,38 +12,55 @@ const API_BASE = "https://aquascape.onrender.com";
 function DashboardShell() {
   const { isSignedIn, getToken } = useAuth();
   const syncAttemptedRef = useRef(false);
+  const [syncing, setSyncing] = useState(false);
+
 
   useEffect(() => {
-    if (!isSignedIn) return;
-    if (syncAttemptedRef.current) return; // Prevent duplicate calls
+  if (!isSignedIn) return;
+  if (syncAttemptedRef.current) return;
 
-    async function syncUser() {
-      syncAttemptedRef.current = true;
-      
-      try {
-        const token = await getToken({ template: "backend" });
+  async function syncUser() {
+    syncAttemptedRef.current = true;
+    setSyncing(true);
 
-        if (!token) {
-          console.error("❌ No token received from Clerk");
-          syncAttemptedRef.current = false; // Allow retry if no token
-          return;
-        }
-
-        const response = await axios.post(`${API_BASE}/sync-user`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        console.log("✅ User synced:", response.data);
-        toast.success("Berhasil login!");
-      } catch (err) {
-        console.error("❌ Sync user error:", err.response?.data || err);
-        toast.error("Gagal sinkronisasi user");
-        syncAttemptedRef.current = false; // Allow retry on error
+    try {
+      const token = await getToken({ template: "backend" });
+      if (!token) {
+        setSyncing(false);
+        return;
       }
-    }
 
-    syncUser();
-  }, [isSignedIn, getToken]);
+      await axios.post(`${API_BASE}/sync-user`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log("✅ User synced successfully");
+      toast.success("Berhasil login!");
+    } catch (err) {
+      console.error("❌ Sync user error:", err);
+      toast.error("Sinkronisasi user gagal");
+      syncAttemptedRef.current = false;
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  syncUser();
+}, [isSignedIn, getToken]);
+
+
+
+  {
+    syncing && (
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 shadow">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2" />
+          <p className="text-gray-600 text-sm">Menyinkronkan user…</p>
+        </div>
+      </div>
+    )
+  }
+
 
 
   return (
@@ -79,8 +96,17 @@ function DashboardShell() {
       </header>
 
       <main className="site-container p-6">
-        <AquariumList />
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <AquariumList />
+        </div>
       </main>
+      <div className="fixed-signout">
+        <SignOutButton>
+          <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg transition">
+            🚪 Sign Out
+          </button>
+        </SignOutButton>
+      </div>
     </div>
   );
 }
