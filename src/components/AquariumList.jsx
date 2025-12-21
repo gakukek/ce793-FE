@@ -60,6 +60,7 @@ export default function AquariumList() {
     }
   }
 
+  // ✅ NEW: Send feed command
   async function sendFeedCommand(aquarium) {
     try {
       const token = await getToken({ template: "backend" });
@@ -134,12 +135,16 @@ export default function AquariumList() {
     fetchAquariums();
   }, []);
 
-  function openSchedule(aq) {
-    setScheduleTarget(aq);
+  useEffect(() => {
+  async function setAxiosAuth() {
+    const token = await getToken({ template: "backend" });
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
   }
-  function closeSchedule() {
-    setScheduleTarget(null);
-  }
+  setAxiosAuth();
+}, [getToken]);
+
 
   // Filter search
   const filtered = useMemo(() => {
@@ -209,7 +214,7 @@ export default function AquariumList() {
         </div>
       </div>
 
-      <AddAquariumForm onAdded={(created) => { fetchAquariums(); if (created) openSchedule(created); }} />
+      <AddAquariumForm onAdded={fetchAquariums} />
 
       {/* Aquarium List */}
       {loading ? (
@@ -257,7 +262,7 @@ export default function AquariumList() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-2 justify-center">
                       <button
-                        className={`action-btn primary ${!aq.device_uid ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className="bg-green-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => sendFeedCommand(aq)}
                         disabled={!aq.device_uid}
                         title={!aq.device_uid ? "No device connected" : "Send feed command"}
@@ -267,7 +272,7 @@ export default function AquariumList() {
                       </button>
 
                       <button
-                        className="action-btn"
+                        className="bg-blue-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition"
                         onClick={() => showSensorChartFor(aq)}
                       >
                         <ChartBarIcon className="w-4 h-4" />
@@ -275,7 +280,7 @@ export default function AquariumList() {
                       </button>
                       
                       <button
-                        className="action-btn ghost"
+                        className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition"
                         onClick={() => openEdit(aq)}
                       >
                         <PencilSquareIcon className="w-4 h-4" />
@@ -283,7 +288,7 @@ export default function AquariumList() {
                       </button>
                       
                       <button
-                        className="action-btn danger"
+                        className="bg-red-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-red-600 transition"
                         onClick={() => deleteAquarium(aq.id)}
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -307,14 +312,6 @@ export default function AquariumList() {
         <EditAquariumModal
           aquarium={editing}
           onClose={closeEdit}
-          onSaved={fetchAquariums}
-        />
-      )}
-
-      {scheduleTarget && (
-        <ScheduleModal
-          aquarium={scheduleTarget}
-          onClose={closeSchedule}
           onSaved={fetchAquariums}
         />
       )}
