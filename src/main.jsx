@@ -5,7 +5,7 @@ import "./index.css";
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/clerk-react";
 
-const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuZGFycnlsY2xheWxheWF5YS53b3JrZXJzLmRldiQ";
+const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuY2U3MzktZmUucGFnZXMuZGV2JA";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
