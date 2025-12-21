@@ -139,12 +139,13 @@ input:focus {
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
+  max-width: 600px; 
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   z-index: 10000;
+  padding: 24px;  /* Add padding here instead of in JSX */
 }
 /* compact action buttons used across lists */
 .action-btn {

@@ -29,14 +29,20 @@ export default function AquariumList() {
   // Fetch aquariums
   async function fetchAquariums() {
     setLoading(true);
+    console.log("🔄 Fetching aquariums..."); // ✅ ADD THIS
     try {
       const token = await getToken({ template: "backend" });
+      console.log("✅ Got token, calling API..."); // ✅ ADD THIS
+
       const res = await axios.get(`${API_BASE}/aquariums`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      console.log("✅ Aquariums loaded:", res.data.length); // ✅ ADD THIS
       setAquariums(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("❌ Error fetching aquariums:", err);
+      console.error("❌ Error details:", err.response?.data); // ✅ ADD THIS
       toast.error("Gagal memuat daftar aquarium");
       setAquariums([]);
     } finally {
@@ -273,7 +279,7 @@ export default function AquariumList() {
                         <ChartBarIcon className="w-4 h-4" />
                         <span>Grafik</span>
                       </button>
-                      
+
                       <button
                         className="action-btn ghost"
                         onClick={() => openEdit(aq)}
@@ -281,7 +287,7 @@ export default function AquariumList() {
                         <PencilSquareIcon className="w-4 h-4" />
                         <span>Edit</span>
                       </button>
-                      
+
                       <button
                         className="action-btn danger"
                         onClick={() => deleteAquarium(aq.id)}

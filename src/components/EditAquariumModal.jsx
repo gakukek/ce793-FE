@@ -48,7 +48,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Edit Aquarium</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">

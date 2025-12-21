@@ -16,33 +16,37 @@ function DashboardShell() {
 
 
   useEffect(() => {
-    if (!isSignedIn) return;
-    if (syncAttemptedRef.current) return;
+  if (!isSignedIn) return;
+  if (syncAttemptedRef.current) return;
 
-    async function syncUser() {
-      syncAttemptedRef.current = true;
-      setSyncing(true);
+  async function syncUser() {
+    syncAttemptedRef.current = true;
+    setSyncing(true);
 
-      try {
-        const token = await getToken({ template: "backend" });
-        if (!token) return;
-
-        await axios.post(`${API_BASE}/sync-user`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        toast.success("Berhasil login!");
-      } catch (err) {
-        console.error("❌ Sync user error:", err);
-        toast.error("Sinkronisasi user gagal");
-        syncAttemptedRef.current = false;
-      } finally {
+    try {
+      const token = await getToken({ template: "backend" });
+      if (!token) {
         setSyncing(false);
+        return;
       }
-    }
 
-    syncUser();
-  }, [isSignedIn, getToken]);
+      await axios.post(`${API_BASE}/sync-user`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log("✅ User synced successfully");
+      toast.success("Berhasil login!");
+    } catch (err) {
+      console.error("❌ Sync user error:", err);
+      toast.error("Sinkronisasi user gagal");
+      syncAttemptedRef.current = false;
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  syncUser();
+}, [isSignedIn, getToken]);
 
 
 
