@@ -96,10 +96,16 @@ function DashboardShell() {
           <AquariumList />
         </div>
       </main>
-      <SignOutButton>
-        <button className="btn btn-danger">Sign Out</button>
-      </SignOutButton>
-    </div >
+      {/* Fixed Bottom-Right Sign Out Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <SignOutButton>
+          <button className="btn-danger shadow-2xl">
+            <span className="btn-icon">🚪</span>
+            <span>Sign Out</span>
+          </button>
+        </SignOutButton>
+      </div>
+    </div>
   );
 }
 
