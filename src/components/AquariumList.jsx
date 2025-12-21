@@ -76,17 +76,17 @@ export default function AquariumList() {
     }
     setAxiosAuth();
   }, [getToken]);
-  
+
   useEffect(() => {
     let mounted = true;
-  
+
     (async () => {
       const token = await getToken({ template: "backend" });
       if (token && mounted) {
         axios.defaults.headers.common.Authorization = `Bearer ${token}`;
       }
     })();
-  
+
     return () => {
       mounted = false;
     };
@@ -111,18 +111,41 @@ export default function AquariumList() {
   // ✅ NEW: Send feed command
   async function sendFeedCommand(aquarium) {
     try {
+      // prefer aquarium.feeding_volume_grams if set, otherwise estimate from size_litres or fallback to 5g
+      const fv = aquarium?.feeding_volume_grams != null ? Number(aquarium.feeding_volume_grams) : null;
+      const estimatedFromSize = aquarium?.size_litres ? Math.max(1, Math.round(aquarium.size_litres * 0.2)) : 5;
+      const defaultFeed = fv && !isNaN(fv) && fv > 0 ? fv : estimatedFromSize;
+
+      const input = window.prompt(
+        `Masukkan volume pakan (gram) untuk "${aquarium.name}":`,
+        String(defaultFeed)
+      );
+      if (input === null) return; // cancelled
+
+      const volume = parseFloat(input);
+      if (isNaN(volume) || volume <= 0) {
+        toast.error("Masukkan volume yang valid (angka > 0)");
+        return;
+      }
+
       const token = await getToken({ template: "backend" });
-      await axios.post(`${API_BASE}/alerts`, {
-        aquarium_id: aquarium.id,
-        type: "CMD_FEED",
-        message: `Manual feed command for ${aquarium.name}`
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success(`🍽️ Feed command sent to ${aquarium.name}!`);
+      await axios.post(
+        `${API_BASE}/feeding_logs`,
+        {
+          aquarium_id: aquarium.id,
+          mode: "MANUAL",
+          volume_grams: volume,
+          actor: "manual_ui",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success(`🍽️ Feeding log created for ${aquarium.name} (${volume} g)`);
     } catch (err) {
-      console.error("❌ Failed to send feed command:", err);
-      toast.error("Gagal mengirim perintah makan");
+      console.error("❌ Failed to create feeding log:", err);
+      toast.error("Gagal membuat feeding log");
     }
   }
 
