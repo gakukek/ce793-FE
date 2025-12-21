@@ -69,8 +69,12 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Edit Aquarium</h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
-            <XMarkIcon className="w-5 h-5 text-gray-600" />
+          <button
+            onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 text-lg"
+              aria-label="Tutup"
+            >
+              ❌
           </button>
         </div>
 
