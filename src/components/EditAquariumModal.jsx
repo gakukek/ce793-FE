@@ -47,9 +47,9 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Edit Aquarium</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
             <XMarkIcon className="w-5 h-5 text-gray-600" />
@@ -81,7 +81,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
           />
           <div className="flex gap-2">
             <input
-              className="flex-1 border p-2 rounded"
+              className="input flex-1"
               value={form.feeding_volume_grams}
               onChange={(e) => setForm({ ...form, feeding_volume_grams: e.target.value })}
               placeholder="Feeding volume (g)"
@@ -89,7 +89,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
               step="0.01"
             />
             <input
-              className="w-28 border p-2 rounded"
+              className="input w-28"
               value={form.feeding_period_hours}
               onChange={(e) => setForm({ ...form, feeding_period_hours: e.target.value })}
               placeholder="Period h"
@@ -97,7 +97,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 mt-4">
             <button type="button" onClick={onClose} className="action-btn ghost">
               Batal
             </button>

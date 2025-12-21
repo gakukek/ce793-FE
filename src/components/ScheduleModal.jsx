@@ -50,46 +50,49 @@ export default function ScheduleModal({ aquarium, onClose, onSaved }) {
     if (!aquarium) return null;
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40"
-            style={{ zIndex: 9999 } }>
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4" style={{ position: 'relative', zIndex: 10000 }}>
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold">Atur Jadwal untuk {aquarium.name}</h3>
-                        <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
-                            <XMarkIcon className="w-5 h-5 text-gray-600" />
-                        </button>
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Atur Jadwal untuk {aquarium.name}</h3>
+                    <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
+                        <XMarkIcon className="w-5 h-5 text-gray-600" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSave} className="space-y-4">
+                    <div>
+                        <label className="block text-sm text-gray-600 mb-1">Feeding volume (grams)</label>
+                        <input
+                            className="input"
+                            value={form.feeding_volume_grams}
+                            onChange={(e) => setForm({ ...form, feeding_volume_grams: e.target.value })}
+                            placeholder="e.g. 1.5"
+                            type="number"
+                            step="0.01"
+                        />
                     </div>
 
-                    <form onSubmit={handleSave} className="space-y-3">
-                        <div>
-                            <label className="block text-sm text-gray-600 mb-1">Feeding volume (grams)</label>
-                            <input
-                                className="input"
-                                value={form.feeding_volume_grams}
-                                onChange={(e) => setForm({ ...form, feeding_volume_grams: e.target.value })}
-                                placeholder="e.g. 1.5"
-                                type="number"
-                                step="0.01"
-                            />
-                        </div>
+                    <div>
+                        <label className="block text-sm text-gray-600 mb-1">Feeding period (hours)</label>
+                        <input
+                            className="input"
+                            value={form.feeding_period_hours}
+                            onChange={(e) => setForm({ ...form, feeding_period_hours: e.target.value })}
+                            placeholder="e.g. 8"
+                            type="number"
+                        />
+                    </div>
 
-                        <div>
-                            <label className="block text-sm text-gray-600 mb-1">Feeding period (hours)</label>
-                            <input
-                                className="input"
-                                value={form.feeding_period_hours}
-                                onChange={(e) => setForm({ ...form, feeding_period_hours: e.target.value })}
-                                placeholder="e.g. 8"
-                                type="number"
-                            />
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                            <button type="button" onClick={onClose} className="px-3 py-1 rounded btn-secondary">Batal</button>
-                            <button type="submit" className="px-3 py-1 rounded sea-btn" disabled={saving}>{saving ? "Menyimpan..." : "Simpan Jadwal"}</button>
-                        </div>
-                    </form>
-                </div>
-        </ div>
-            );
+                    <div className="flex justify-end gap-2 mt-6">
+                        <button type="button" onClick={onClose} className="px-4 py-2 rounded btn-secondary">
+                            Batal
+                        </button>
+                        <button type="submit" className="px-4 py-2 rounded sea-btn" disabled={saving}>
+                            {saving ? "Menyimpan..." : "Simpan Jadwal"}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 }
