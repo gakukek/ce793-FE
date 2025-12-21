@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import AddAquariumForm from "./AddAquariumForm";
 import SensorChart from "./SensorChart";
 import EditAquariumModal from "./EditAquariumModal";
+import ScheduleModal from "./ScheduleModal";
 import { useAuth } from "@clerk/clerk-react";
 import {
   MagnifyingGlassIcon,
@@ -18,6 +19,7 @@ export default function AquariumList() {
   const [aquariums, setAquariums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
+  const [scheduleTarget, setScheduleTarget] = useState(null);
   const [selectedSensorData, setSelectedSensorData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [query, setQuery] = useState("");
@@ -58,7 +60,6 @@ export default function AquariumList() {
     }
   }
 
-  // ✅ NEW: Send feed command
   async function sendFeedCommand(aquarium) {
     try {
       const token = await getToken({ template: "backend" });
@@ -133,6 +134,13 @@ export default function AquariumList() {
     fetchAquariums();
   }, []);
 
+  function openSchedule(aq) {
+    setScheduleTarget(aq);
+  }
+  function closeSchedule() {
+    setScheduleTarget(null);
+  }
+
   // Filter search
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -201,7 +209,7 @@ export default function AquariumList() {
         </div>
       </div>
 
-      <AddAquariumForm onAdded={fetchAquariums} />
+      <AddAquariumForm onAdded={(created) => { fetchAquariums(); if (created) openSchedule(created); }} />
 
       {/* Aquarium List */}
       {loading ? (
@@ -249,7 +257,7 @@ export default function AquariumList() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-2 justify-center">
                       <button
-                        className="bg-green-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`action-btn primary ${!aq.device_uid ? 'opacity-60 cursor-not-allowed' : ''}`}
                         onClick={() => sendFeedCommand(aq)}
                         disabled={!aq.device_uid}
                         title={!aq.device_uid ? "No device connected" : "Send feed command"}
@@ -259,7 +267,7 @@ export default function AquariumList() {
                       </button>
 
                       <button
-                        className="bg-blue-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition"
+                        className="action-btn"
                         onClick={() => showSensorChartFor(aq)}
                       >
                         <ChartBarIcon className="w-4 h-4" />
@@ -267,7 +275,7 @@ export default function AquariumList() {
                       </button>
                       
                       <button
-                        className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition"
+                        className="action-btn ghost"
                         onClick={() => openEdit(aq)}
                       >
                         <PencilSquareIcon className="w-4 h-4" />
@@ -275,7 +283,7 @@ export default function AquariumList() {
                       </button>
                       
                       <button
-                        className="bg-red-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-red-600 transition"
+                        className="action-btn danger"
                         onClick={() => deleteAquarium(aq.id)}
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -299,6 +307,14 @@ export default function AquariumList() {
         <EditAquariumModal
           aquarium={editing}
           onClose={closeEdit}
+          onSaved={fetchAquariums}
+        />
+      )}
+
+      {scheduleTarget && (
+        <ScheduleModal
+          aquarium={scheduleTarget}
+          onClose={closeSchedule}
           onSaved={fetchAquariums}
         />
       )}

@@ -92,7 +92,7 @@ function DashboardShell() {
       </header>
 
       <main className="site-container p-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm p-6">
           <AquariumList />
         </div>
       </main>

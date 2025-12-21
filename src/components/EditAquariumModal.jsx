@@ -58,14 +58,14 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
 
         <form onSubmit={handleSave} className="space-y-3">
           <input
-            className="w-full border p-2 rounded"
+            className="input"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Nama Aquarium"
             required
           />
           <input
-            className="w-full border p-2 rounded"
+            className="input"
             value={form.size_litres}
             onChange={(e) => setForm({ ...form, size_litres: e.target.value })}
             placeholder="Volume (L)"
@@ -73,7 +73,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
             step="0.01"
           />
           <input
-            className="w-full border p-2 rounded"
+            className="input"
             value={form.device_uid}
             onChange={(e) => setForm({ ...form, device_uid: e.target.value })}
             placeholder="Device UID"
@@ -98,10 +98,10 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
           </div>
 
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-3 py-1 rounded btn-secondary">
+            <button type="button" onClick={onClose} className="action-btn ghost">
               Batal
             </button>
-            <button type="submit" className="px-3 py-1 rounded sea-btn" disabled={saving}>
+            <button type="submit" className="action-btn primary" disabled={saving}>
               {saving ? "Menyimpan..." : "Simpan"}
             </button>
           </div>

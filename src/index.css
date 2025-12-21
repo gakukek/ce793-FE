@@ -117,6 +117,35 @@ input:focus {
   border-radius: 0.6rem;
 }
 
+/* compact action buttons used across lists */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  transition: all 0.14s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.action-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(11,127,174,0.08); }
+.action-btn.primary { background: linear-gradient(90deg, var(--sea-blue), var(--sea-blue-dark)); color: white; }
+.action-btn.ghost { background: white; border-color: rgba(3,57,84,0.06); color: #044a60; }
+.action-btn.danger { background: linear-gradient(90deg, #ef4444, #dc2626); color: white; }
+.action-btn[disabled] { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* small consistent input look for forms */
+.input {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e6eef2;
+  background: white;
+}
+.input:focus { outline: none; border-color: var(--sea-blue); box-shadow: 0 0 0 3px rgba(11,127,174,0.06); }
+
 /* table polish */
 .polished-table thead th { background: transparent; color: #164e63; }
 .polished-table tbody tr:hover { background: rgba(11,127,174,0.03); }
