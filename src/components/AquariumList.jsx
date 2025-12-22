@@ -23,8 +23,80 @@ export default function AquariumList() {
   const [selectedSensorData, setSelectedSensorData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [query, setQuery] = useState("");
+  
+  // Alert states
+  const [dangerAlerts, setDangerAlerts] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
 
   const { getToken } = useAuth();
+
+  // Fetch danger alerts for ALL aquariums
+  async function fetchAllDangerAlerts() {
+    if (aquariums.length === 0) return;
+    
+    setAlertsLoading(true);
+    try {
+      const token = await getToken({ template: "backend" });
+      
+      // Fetch alerts for all aquariums in parallel
+      const alertPromises = aquariums.map(aq =>
+        axios.get(`${API_BASE}/alerts?aquarium_id=${aq.id}&type=DANGER_SENSOR`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(err => {
+          console.error(`Failed to fetch alerts for aquarium ${aq.id}:`, err);
+          return { data: [] };
+        })
+      );
+      
+      const results = await Promise.all(alertPromises);
+      
+      // Flatten all alerts and filter for unresolved ones
+      const allAlerts = results
+        .flatMap(res => Array.isArray(res.data) ? res.data : [])
+        .filter(a => !a.resolved);
+      
+      setDangerAlerts(allAlerts);
+    } catch (err) {
+      console.error("Failed to fetch danger alerts", err);
+      setDangerAlerts([]);
+    } finally {
+      setAlertsLoading(false);
+    }
+  }
+
+  // Function to resolve an alert
+  async function resolveAlert(alertId) {
+    try {
+      const token = await getToken({ template: "backend" });
+      await axios.patch(`${API_BASE}/alerts/${alertId}/resolve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Remove the alert from local state
+      setDangerAlerts(prev => prev.filter(a => a.id !== alertId));
+      toast.success("Alert resolved");
+    } catch (err) {
+      console.error("Failed to resolve alert", err);
+      toast.error("Failed to resolve alert. Please try again.");
+    }
+  }
+
+  // Fetch alerts whenever aquariums list changes
+  useEffect(() => {
+    if (aquariums.length > 0) {
+      // Fetch immediately
+      fetchAllDangerAlerts();
+      
+      // Set up polling to check for new alerts every 30 seconds
+      const interval = setInterval(() => {
+        fetchAllDangerAlerts();
+      }, 30000); // 30 seconds
+      
+      return () => clearInterval(interval);
+    } else {
+      setDangerAlerts([]);
+    }
+  }, [aquariums.length]); // Only depend on length to avoid infinite loops
 
   // Fetch aquariums
   async function fetchAquariums() {
@@ -41,12 +113,12 @@ export default function AquariumList() {
 
         const res = await axios.get(`${API_BASE}/aquariums`, {
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 30000  // ✅ 30 second timeout for cold start
+          timeout: 30000
         });
 
         console.log("✅ Aquariums loaded:", res.data.length);
         setAquariums(Array.isArray(res.data) ? res.data : []);
-        break;  // Success, exit loop
+        break;
 
       } catch (err) {
         attempts++;
@@ -100,6 +172,7 @@ export default function AquariumList() {
       await axios.delete(`${API_BASE}/aquariums/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       fetchAquariums();
       toast.success("Aquarium dihapus");
     } catch (err) {
@@ -108,10 +181,9 @@ export default function AquariumList() {
     }
   }
 
-  // ✅ NEW: Send feed command
+  // Send feed command
   async function sendFeedCommand(aquarium) {
     try {
-      // prefer aquarium.feeding_volume_grams if set, otherwise estimate from size_litres or fallback to 5g
       const fv = aquarium?.feeding_volume_grams != null ? Number(aquarium.feeding_volume_grams) : null;
       const estimatedFromSize = aquarium?.size_litres ? Math.max(1, Math.round(aquarium.size_litres * 0.2)) : 5;
       const defaultFeed = fv && !isNaN(fv) && fv > 0 ? fv : estimatedFromSize;
@@ -120,7 +192,7 @@ export default function AquariumList() {
         `Masukkan volume pakan (gram) untuk "${aquarium.name}":`,
         String(defaultFeed)
       );
-      if (input === null) return; // cancelled
+      if (input === null) return;
 
       const volume = parseFloat(input);
       if (isNaN(volume) || volume <= 0) {
@@ -157,25 +229,9 @@ export default function AquariumList() {
     setEditing(null);
   }
 
-  useEffect(() => {
-    if (selectedAquarium?.id) {
-      fetchDangerAlerts(selectedAquarium.id);
-
-      // Set up polling to check for new alerts every 30 seconds
-      const interval = setInterval(() => {
-        fetchDangerAlerts(selectedAquarium.id);
-      }, 30000); // 30 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [selectedAquarium?.id]);
-
   // Fetch sensor data
   async function showSensorChartFor(aq) {
     setChartLoading(true);
-
-    // Fetch alerts immediately when viewing this aquarium
-    fetchDangerAlerts(aq.id);
 
     try {
       const token = await getToken({ template: "backend" });
@@ -212,6 +268,7 @@ export default function AquariumList() {
         generateDemoData();
       }
     } catch (err) {
+      toast.warning("Belum ada data sensor, menampilkan data demo");
       console.warn("Sensor API error, using demo data", err);
       generateDemoData();
     } finally {
@@ -248,13 +305,20 @@ export default function AquariumList() {
     );
   }, [aquariums, query]);
 
+  // Get aquarium name for an alert
+  function getAquariumNameForAlert(alert) {
+    const aq = aquariums.find(a => a.id === alert.aquarium_id);
+    return aq ? aq.name : "Unknown Aquarium";
+  }
+
+  // Alert Banner Component
   function DangerAlertBanner() {
     if (alertsLoading && dangerAlerts.length === 0) {
-      return null; // Don't show loading state
+      return null;
     }
 
     if (dangerAlerts.length === 0) {
-      return null; // No alerts to show
+      return null;
     }
 
     return (
@@ -262,7 +326,8 @@ export default function AquariumList() {
         {dangerAlerts.map(alert => (
           <div
             key={alert.id}
-            className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-md animate-pulse-slow"
+            className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-md"
+            style={{ animation: "pulse-slow 3s ease-in-out infinite" }}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3 flex-1">
@@ -283,7 +348,7 @@ export default function AquariumList() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold text-red-800">
-                    ⚠️ Sensor Alert
+                    ⚠️ Sensor Alert - {getAquariumNameForAlert(alert)}
                   </h3>
                   <p className="mt-1 text-sm text-red-700">
                     {alert.message}
@@ -308,7 +373,9 @@ export default function AquariumList() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
+      {/* Alert Banner - Always visible at top */}
       <DangerAlertBanner />
+      
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-2xl font-semibold">Daftar Aquarium</h2>
         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -360,6 +427,19 @@ export default function AquariumList() {
               </p>
             </div>
             <div className="text-purple-500 bg-purple-50 p-3 rounded-lg">📊</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">
+                Active Alerts
+              </h3>
+              <p className="text-3xl font-bold text-gray-900">
+                {dangerAlerts.length}
+              </p>
+            </div>
+            <div className="text-red-500 bg-red-50 p-3 rounded-lg">⚠️</div>
           </div>
         </div>
       </div>
