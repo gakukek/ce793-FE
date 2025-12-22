@@ -43,7 +43,7 @@ export default function ScheduleModal({ aquarium, onClose, onSaved }) {
 
             // 2️⃣ Create / update scheduler rule
             await axios.post(
-                `${API_BASE}/schedules/upsert`,
+                `${API_BASE}/schedules`,
                 {
                     aquarium_id: aquarium.id,
                     name: "Auto Feeding",
