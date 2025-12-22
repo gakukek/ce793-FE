@@ -23,7 +23,7 @@ export default function AquariumList() {
   const [selectedSensorData, setSelectedSensorData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [query, setQuery] = useState("");
-  
+
   // Alert states
   const [dangerAlerts, setDangerAlerts] = useState([]);
   const [alertsLoading, setAlertsLoading] = useState(false);
@@ -33,11 +33,11 @@ export default function AquariumList() {
   // Fetch danger alerts for ALL aquariums
   async function fetchAllDangerAlerts() {
     if (aquariums.length === 0) return;
-    
+
     setAlertsLoading(true);
     try {
       const token = await getToken({ template: "backend" });
-      
+
       // Fetch alerts for all aquariums in parallel
       const alertPromises = aquariums.map(aq =>
         axios.get(`${API_BASE}/alerts?aquarium_id=${aq.id}&type=DANGER_SENSOR`, {
@@ -47,14 +47,14 @@ export default function AquariumList() {
           return { data: [] };
         })
       );
-      
+
       const results = await Promise.all(alertPromises);
-      
+
       // Flatten all alerts and filter for unresolved ones
       const allAlerts = results
         .flatMap(res => Array.isArray(res.data) ? res.data : [])
         .filter(a => !a.resolved);
-      
+
       setDangerAlerts(allAlerts);
     } catch (err) {
       console.error("Failed to fetch danger alerts", err);
@@ -68,10 +68,10 @@ export default function AquariumList() {
   async function resolveAlert(alertId) {
     try {
       const token = await getToken({ template: "backend" });
-      await axios.patch(`${API_BASE}/alerts/${alertId}/resolve`, {}, {
+      await axios.delete(`${API_BASE}/alerts/${alertId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Remove the alert from local state
       setDangerAlerts(prev => prev.filter(a => a.id !== alertId));
       toast.success("Alert resolved");
@@ -86,12 +86,12 @@ export default function AquariumList() {
     if (aquariums.length > 0) {
       // Fetch immediately
       fetchAllDangerAlerts();
-      
+
       // Set up polling to check for new alerts every 30 seconds
       const interval = setInterval(() => {
         fetchAllDangerAlerts();
       }, 30000); // 30 seconds
-      
+
       return () => clearInterval(interval);
     } else {
       setDangerAlerts([]);
@@ -172,7 +172,7 @@ export default function AquariumList() {
       await axios.delete(`${API_BASE}/aquariums/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       fetchAquariums();
       toast.success("Aquarium dihapus");
     } catch (err) {
@@ -375,7 +375,7 @@ export default function AquariumList() {
     <div className="max-w-5xl mx-auto px-4 py-6">
       {/* Alert Banner - Always visible at top */}
       <DangerAlertBanner />
-      
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-2xl font-semibold">Daftar Aquarium</h2>
         <div className="flex items-center gap-3 w-full sm:w-auto">
