@@ -14,6 +14,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
     size_litres: aquarium.size_litres ?? "",
     device_uid: aquarium.device_uid || "",
     feeding_volume_grams: aquarium.feeding_volume_grams ?? "",
+    feeding_hours: aquarium.feeding_hours || "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -45,6 +46,8 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
             form.feeding_volume_grams === ""
               ? null
               : Number(form.feeding_volume_grams),
+              feeding_hours:
+                form.feeding_hours === "" ? null : form.feeding_hours,
         },
         {
           headers: {
@@ -122,6 +125,20 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
                   ...form,
                   feeding_volume_grams: e.target.value,
                 })
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Jam Pakan (pisahkan dengan koma, format HH:MM)
+            </label>
+            <input
+              className="input"
+              placeholder="08:00,20:00"
+              value={form.feeding_hours}
+              onChange={(e) =>
+                setForm({ ...form, feeding_hours: e.target.value })
               }
             />
           </div>
