@@ -22,30 +22,50 @@ export default function ScheduleModal({ aquarium, onClose, onSaved }) {
     async function handleSave(e) {
         e.preventDefault();
         setSaving(true);
+
         try {
             const token = await getToken({ template: "backend" });
-            await axios.put(`${API_BASE}/aquariums/${aquarium.id}`, {
-                // Include ALL existing aquarium fields
-                name: aquarium.name,
-                size_litres: aquarium.size_litres,
-                device_uid: aquarium.device_uid,
-                // Then update only the schedule fields
-                feeding_volume_grams: form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
-                feeding_period_hours: form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+
+            // 1️⃣ Update aquarium defaults
+            await axios.put(
+                `${API_BASE}/aquariums/${aquarium.id}`,
+                {
+                    name: aquarium.name,
+                    size_litres: aquarium.size_litres,
+                    device_uid: aquarium.device_uid,
+                    feeding_volume_grams:
+                        form.feeding_volume_grams === "" ? null : Number(form.feeding_volume_grams),
+                    feeding_period_hours:
+                        form.feeding_period_hours === "" ? null : Number(form.feeding_period_hours),
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // 2️⃣ Create / update scheduler rule
+            await axios.post(
+                `${API_BASE}/schedules/upsert`,
+                {
+                    aquarium_id: aquarium.id,
+                    name: "Auto Feeding",
+                    type: "interval",
+                    interval_hours: Number(form.feeding_period_hours),
+                    feed_volume_grams: Number(form.feeding_volume_grams),
+                    enabled: true,
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
             toast.success("Jadwal berhasil disimpan");
-            if (onSaved) onSaved();
+            onSaved?.();
             onClose();
         } catch (err) {
-            console.error("❌ Full error:", err.response?.data);  // ✅ ADD THIS to see exact error
-            console.error("Gagal menyimpan jadwal:", err);
+            console.error(err.response?.data || err);
             toast.error("Gagal menyimpan jadwal");
         } finally {
             setSaving(false);
         }
     }
+
 
     if (!aquarium) return null;
 
