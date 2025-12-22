@@ -14,7 +14,7 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
     size_litres: aquarium.size_litres ?? "",
     device_uid: aquarium.device_uid || "",
     feeding_volume_grams: aquarium.feeding_volume_grams ?? "",
-    feeding_hours: aquarium.feeding_hours || "",
+    feeding_period_hours: aquarium.feeding_period_hours ?? "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -46,8 +46,10 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
             form.feeding_volume_grams === ""
               ? null
               : Number(form.feeding_volume_grams),
-              feeding_hours:
-                form.feeding_hours === "" ? null : form.feeding_hours,
+          feeding_period_hours:
+            form.feeding_period_hours === ""
+              ? null
+              : Number(form.feeding_period_hours),
         },
         {
           headers: {
@@ -74,10 +76,10 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
           <h3 className="text-lg font-semibold">Edit Aquarium</h3>
           <button
             onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 text-lg"
-              aria-label="Tutup"
-            >
-              ❌
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 text-lg"
+            aria-label="Tutup"
+          >
+            ❌
           </button>
         </div>
 
@@ -113,6 +115,22 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
 
           <div>
             <label className="block mb-1 text-sm font-medium text-gray-700">
+              Device UID
+            </label>
+            <input
+              className="input bg-gray-100 cursor-not-allowed"
+              type="text"
+              value={form.device_uid || "Tidak ada device terhubung"}
+              disabled
+              readOnly
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Device UID tidak dapat diubah setelah dibuat
+            </p>
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               Volume per Pakan (gram)
             </label>
             <input
@@ -126,21 +144,31 @@ export default function EditAquariumModal({ aquarium, onClose, onSaved }) {
                   feeding_volume_grams: e.target.value,
                 })
               }
+              placeholder="Contoh: 5"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Jumlah pakan dalam gram untuk setiap pemberian
+            </p>
           </div>
 
           <div>
             <label className="block mb-1 text-sm font-medium text-gray-700">
-              Jam Pakan (pisahkan dengan koma, format HH:MM)
+              Periode Pemberian Pakan (jam)
             </label>
             <input
               className="input"
-              placeholder="08:00,20:00"
-              value={form.feeding_hours}
+              type="number"
+              min="1"
+              step="1"
+              value={form.feeding_period_hours}
               onChange={(e) =>
-                setForm({ ...form, feeding_hours: e.target.value })
+                setForm({ ...form, feeding_period_hours: e.target.value })
               }
+              placeholder="Contoh: 12"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Berikan pakan setiap X jam (contoh: 12 = 2x sehari)
+            </p>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">
